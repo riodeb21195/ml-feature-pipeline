@@ -7,11 +7,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.extend([str(ROOT / "features"), str(ROOT / "data_generation"), str(ROOT / "monitoring"), str(ROOT / "scoring")])
-from build_features import build_features
-from check_data_quality import validate_orders
-from evaluate_predictions import evaluate_predictions
-from generate_new_orders import generate_new_orders
-from predict import score_orders
+
+def _load_test_modules():
+    from build_features import build_features
+    from check_data_quality import validate_orders
+    from evaluate_predictions import evaluate_predictions
+    from generate_new_orders import generate_new_orders
+    from predict import score_orders
+    return build_features, validate_orders, evaluate_predictions, generate_new_orders, score_orders
+
+build_features, validate_orders, evaluate_predictions, generate_new_orders, score_orders = _load_test_modules()
 
 
 def _history():
