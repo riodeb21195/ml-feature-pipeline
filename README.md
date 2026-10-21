@@ -28,10 +28,10 @@ Historische vs. aktuelle Eingabeverteilung ──> Drift Check
 
 ## Schnellstart
 
-Getestete Umgebung: Python 3.11. Die Abhängigkeiten sind in `requirements.txt` festgelegt.
+Getestete Umgebung: Python 3.12. Die Abhängigkeiten sind in `requirements.txt` festgelegt.
 
 ```bash
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
