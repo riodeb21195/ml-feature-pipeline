@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check features/ training/ monitoring/ data_generation/ scoring/ tests/
+
+      - name: Unit tests (point-in-time correctness, inference and monitoring)
+        run: pytest tests/unit -v
+
+      - name: End-to-end smoke run
+        run: |
+          python data_generation/generate_raw_orders.py
+          python monitoring/check_data_quality.py
+          python features/build_features.py
+          python training/train_model.py
+          python data_generation/generate_new_orders.py --n-orders 200 --seed 2026
+          python scoring/predict.py
+          python monitoring/check_drift.py

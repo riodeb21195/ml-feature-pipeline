@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.venv/
+venv/
+data_generation/*.parquet
+training/runs/*.json
+models/*.joblib
+models/*.json
+monitoring/drift_history.jsonl

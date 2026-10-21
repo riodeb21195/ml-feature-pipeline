@@ -1,0 +1,63 @@
+# Feature-Registry (schlanke Alternative zu einem vollen Feature-Store wie Feast).
+# Jedes Feature, das in features/build_features.py berechnet wird, muss hier
+# dokumentiert sein -- Ziel: jeder im Team versteht Definition, Herkunft und
+# Freshness eines Features, ohne den Code lesen zu muessen.
+
+version: 3   # v3: Features beruecksichtigen, wann das Ergebnis einer Bestellung bekannt wird
+
+features:
+  - name: category_late_rate_30d
+    description: >
+      Anteil verspaeteter Lieferungen in derselben Produktkategorie, nur aus
+      Bestellungen, deren Ergebnis (Kauf + Lieferdauer) in den 30 Tagen VOR dem
+      aktuellen Kaufzeitpunkt bekannt wurde. Noch unterwegs befindliche Bestellungen
+      zaehlen nicht.
+    source: raw_orders.parquet
+    owner: data-eng
+    point_in_time_safe: true
+    freshness: "recomputed per order at feature-build time"
+    leakage_risk_if_naive: >
+      Ein GROUP BY ueber den gesamten Datensatz wuerde Zukunft einschliessen; aber auch
+      ein Fenster nur nach Kaufdatum rechnet noch nicht gelieferte Bestellungen ein,
+      deren Label zum Kaufzeitpunkt unbekannt ist.
+
+  - name: state_late_rate_30d
+    description: "Wie category_late_rate_30d, aber pro Bundesstaat statt Kategorie."
+    source: raw_orders.parquet
+    owner: data-eng
+    point_in_time_safe: true
+    freshness: "recomputed per order at feature-build time"
+
+  - name: customer_prior_order_count
+    description: >
+      Anzahl fruehere Bestellungen desselben Kunden VOR der aktuellen Bestellung.
+      Neue Kunden ohne Historie -> 0.
+    source: raw_orders.parquet
+    owner: data-eng
+    point_in_time_safe: true
+    freshness: "recomputed per order at feature-build time"
+
+  - name: customer_prior_late_rate
+    description: >
+      Verspaetungsrate der fruehreren Bestellungen desselben Kunden, nur aus
+      Bestellungen, deren Ergebnis zum Kaufzeitpunkt bereits bekannt war.
+      Ohne solche Historie wird ein fester Prior (0.15) eingesetzt, siehe
+      PRIOR_LATE_RATE in features/build_features.py.
+    source: raw_orders.parquet
+    owner: data-eng
+    point_in_time_safe: true
+    freshness: "recomputed per order at feature-build time"
+
+  - name: order_estimated_delivery_days
+    description: "Direkt aus der Quelle uebernommen, zum Kaufzeitpunkt bereits bekannt."
+    source: raw_orders.parquet
+    owner: data-eng
+    point_in_time_safe: true
+    freshness: "identical to source"
+
+target:
+  name: is_late_delivery
+  description: >
+    Label: wird erst NACH Zustellung bekannt. Darf niemals als Feature
+    verwendet werden (offensichtlich, aber die haeufigste Leakage-Quelle
+    ist ein abgeleitetes Feature, das indirekt das Label verraet).
